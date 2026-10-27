@@ -1,5 +1,6 @@
 import json
 import os
+import paths
 from typing import List
 from operator import itemgetter
 
@@ -12,7 +13,7 @@ class frame_scoring:
         total_count =0
 
         backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        video_dir = os.path.join(backend_dir,"outputs", video_name)
+        video_dir = os.path.join(paths.outputs_dir(), video_name)
 
         with open(f"{video_dir}/frame_scores.jsonl","r") as file:
             for line in file:
@@ -24,7 +25,7 @@ class frame_scoring:
                 total_count += 1
                 if confidence is None:
                     continue
-                if confidence >= conf_threshold:
+                if confidence >= conf_threshold and not output.get('is_other', False):
                     count += 1
                     score_arr.append(output)
 
@@ -59,7 +60,7 @@ class frame_scoring:
     def compute_stats(self,video_name,conf_threshold):
 
         backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        video_dir = os.path.join(backend_dir,"outputs", video_name)
+        video_dir = os.path.join(paths.outputs_dir(), video_name)
         frame_ranked= os.path.join(video_dir,"frame_ranked.json")
 
 

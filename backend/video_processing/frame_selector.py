@@ -1,146 +1,67 @@
+"""
+video_processing/frame_selector.py
+==================================
+Quality filter for extracted frames.
+
+Changes vs. the old version
+---------------------------
+* Frames are NOT kept in RAM (the old code held every full-resolution frame at once).
+* Blur is judged on a fixed-size grey copy and RELATIVE to the video's own median sharpness, so the
+  same setting works for 480p and 1080p recordings (the old absolute threshold of 130 was resolution
+  dependent and could discard every frame of a smooth video, which then crashed torch.stack([])).
+* A minimum number of frames is always kept (sharpest first).
+* Near-duplicates are NOT removed any more: the video-level decision needs consecutive frames
+  ("this finding stays in view for >= 3 frames"); removing duplicates would shorten those runs.
+"""
+import json
+import os
+import paths
+import shutil
+from concurrent.futures import ThreadPoolExecutor
+from typing import List
+
 import cv2
 import numpy as np
-from PIL import Image
-from typing import List, Union, Literal
-import os
-import imagehash
-import json
-from concurrent.futures import ThreadPoolExecutor
-
 
 
 class frame_selector:
+    ANALYSIS_WIDTH = 480
 
-
-    def remove_blurry(self,frames: List[str], video: str, blur_threshold: int):
-
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        output_path = os.path.join(script_dir,"..","outputs")
-
-        video_path = os.path.join(output_path,video,"frames")
-        framesa = []
-
-        # files = os.listdir(video_path)
-
-        # for file in files:
-        #     if file.endswith(".png"): 
-        #         framesa.append(file)
-
-        
-        frame_arr = []
-        frame_var = []
-        frame_score = []
-        count = 0
-
-        # for frame in frames:
-        #     full_path = os.path.join(video_path,frame)
-        #     img = cv2.imread(full_path)
-        #     if img is None:
-        #         print(f"Skipping frame {frame} : could not read the file")
-        #         continue
-        #     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        #     variance = int(cv2.Laplacian(gray, cv2.CV_64F).var())
-        #     if variance > blur_threshold:
-        #         frame_var.append(variance)
-        #         frame_arr.append(img)
-        #         frame_score.append([frame,img,variance])
-        #         count += 1
-
-        def process_frame(frame):
-            full_path = os.path.join(video_path, frame)
-            img = cv2.imread(full_path)
-            if img is None:
-                return None
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            variance = int(cv2.Laplacian(gray, cv2.CV_64F).var())
-            if variance > blur_threshold:
-                return (frame, img, variance)
+    def _sharpness(self, path: str):
+        g = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+        if g is None:
             return None
-        
-        with ThreadPoolExecutor(max_workers=4) as executor:
-            results = list(executor.map(process_frame, frames))
+        h, w = g.shape
+        if w > self.ANALYSIS_WIDTH:
+            g = cv2.resize(g, (self.ANALYSIS_WIDTH, max(1, int(h * self.ANALYSIS_WIDTH / w))), interpolation=cv2.INTER_AREA)
+        return float(cv2.Laplacian(g, cv2.CV_64F).var())
 
-        frame_score = [r for r in results if r is not None]
-        frame_arr = [r[1] for r in frame_score]
-        frame_var = [r[2] for r in frame_score]
-        count = len(frame_score)
-
-        return frame_arr,frame_var, blur_threshold, count, frame_score
-            
-
-    def remove_duplicates(self,frames: List[np.ndarray],video,dup_threshold):
-
-        seen_hashes = set()
-        kept_frames = []
-        frame_score_dup = []
-
-        for name,frame,score in frames:
-            # full_path = os.path.join(cleaned_frames_path,frame)
-            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            img = Image.fromarray(frame_rgb)
-            hash_value = imagehash.dhash(img)
-            is_dup = False
-            for seen in seen_hashes:
-                if abs(seen - hash_value) < dup_threshold:   
-                    is_dup = True                 
-                    break
-            if not is_dup:
-                seen_hashes.add(hash_value)
-                kept_frames.append(frame)
-                frame_score_dup.append([name,frame,score])
-
-
-        return kept_frames,frame_score_dup
-            
-
-    def select_frames(self,frames: List[str], video_name, blur_threshold, dup_threshold):
-        max_frames = 10000
-
+    def select_frames(self, frames: List[str], video_name: str, blur_rel: float = 0.5, min_keep: int = 12):
         backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        video_dir = os.path.join(backend_dir,"outputs", video_name)
-        cleaned_frames = os.path.join(video_dir,"cleaned_frames")
+        video_dir = os.path.join(paths.outputs_dir(), video_name)
+        frames_dir = os.path.join(video_dir, "frames")
+        cleaned_dir = os.path.join(video_dir, "cleaned_frames")
+        shutil.rmtree(cleaned_dir, ignore_errors=True)
+        os.makedirs(cleaned_dir)
 
-        if not os.path.exists(cleaned_frames):
-            os.makedirs(cleaned_frames)
-
-
-
-        img_arr,var_arr,blur_threshold,count,frame_score = self.remove_blurry(frames,video_name,blur_threshold)
-
-        final_frames,frame_score_dup = self.remove_duplicates(frame_score, video_name, dup_threshold)
-
-        if len(final_frames) > max_frames:
-            return final_frames[:max_frames]
-        
-        metadata_path = os.path.join(video_dir,"cleaned_metadata.json")
-
-        qual_arr=[]
-        final_frames_arr=[]
-        for file_name,img,score in frame_score_dup:
-            qual_arr.append([file_name,score])
-            final_frames_arr.append(file_name)
-
-            cleaned_frames_path = os.path.join(cleaned_frames,file_name)
-            cv2.imwrite(cleaned_frames_path,img)
-
-
-        with open(metadata_path,"w") as file:
-
-            entry = {
-                "selected_frames": final_frames_arr,
-                "stats": {
-                    "total_input": len(frames),
-                    "blurry_removed": len(frames) - len(img_arr),
-                    "duplicates_removed" : len(img_arr) - len(final_frames),
-                    "final_selected" : len(final_frames),
-                    "average_blur_score" : np.mean(var_arr)
-                },
-                "quality_scores" : qual_arr
-            }
-
-            json.dump(entry,file,indent=4)
-
-        
-
-        return final_frames_arr, final_frames, cleaned_frames
-        
+        frames = sorted(frames)
+        with ThreadPoolExecutor(max_workers=4) as ex:
+            scores = list(ex.map(lambda f: self._sharpness(os.path.join(frames_dir, f)), frames))
+        ok = [(f, s) for f, s in zip(frames, scores) if s is not None]
+        if not ok:
+            return [], [], cleaned_dir
+        var = np.array([s for _, s in ok])
+        cutoff = max(blur_rel * float(np.median(var)), 1.0)       # absolute floor drops black / flat frames
+        keep = [f for f, s in ok if s >= cutoff]
+        fallback = False
+        if len(keep) < min(min_keep, len(ok)):                    # never starve the model
+            fallback = True
+            keep = sorted(f for f, _ in sorted(ok, key=lambda t: -t[1])[:min(min_keep, len(ok))])
+        for f in keep:
+            shutil.copy2(os.path.join(frames_dir, f), os.path.join(cleaned_dir, f))
+        with open(os.path.join(video_dir, "cleaned_metadata.json"), "w", encoding="utf-8") as fh:
+            json.dump({"selected_frames": keep, "stats": {
+                "total_input": len(frames), "blurry_removed": len(ok) - len(keep) if not fallback else 0,
+                "final_selected": len(keep), "median_sharpness": float(np.median(var)),
+                "cutoff": cutoff, "fallback_used": fallback}}, fh, indent=2)
+        return keep, keep, cleaned_dir          # (names, names, dir): same 3-tuple shape the old main.py expected

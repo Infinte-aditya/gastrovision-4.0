@@ -1,0 +1,13 @@
+GASTROVISION - RESEARCH PROTOTYPE
+
+GastroVision is experimental research software. It is NOT a medical device and has NOT been validated
+for clinical use. Its output must never be used for diagnosis, treatment or any patient-care decision.
+"No finding" does not mean a video is normal.
+
+Everything runs on your own computer; videos are not uploaded anywhere. Do not send patient-identifying
+information when you give feedback.
+
+The model was trained on the public HyperKvasir endoscopy dataset (Borgli et al., 2020). Video decoding uses
+FFmpeg (https://ffmpeg.org), distributed under its own license.
+
+The software is provided "as is", without warranty of any kind.

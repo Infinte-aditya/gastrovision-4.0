@@ -1,135 +1,102 @@
+"""
+backend/main.py - analysis pipeline
+
+video -> frame extraction (3 fps) -> quality filter -> CNN prediction (calibrated) ->
+temporal video-level verdict -> CAM heatmaps (background thread)
+"""
 import os
-import ffmpeg
+import paths
 import shutil
-from model.predictor import predictor
+from threading import Lock, Thread
+
+from model.predictor import Predictor
 from scoring.frame_scoring import frame_scoring
 from scoring.video_scoring import video_scoring
 from video_processing.frame_extractor import frame_extractor
 from video_processing.frame_selector import frame_selector
 from visualization.heatmap import HeatmapGenerator
-from threading import Thread
+
+# The verdict rules below were tuned and validated on 94 held-out HyperKvasir videos scored at 1 frame/s
+# (see CHANGES.md).  Deploying the same sampling rate keeps "what was measured" == "what runs".
+TARGET_FPS = float(os.environ.get("GASTROVISION_FPS", "1"))
+# polyps get a lower confidence bar than everything else: a missed polyp costs more than a false alarm.
+# 0.6 is the plateau on val/test - going lower added false findings without finding more polyps.
+CLASS_THRESHOLDS = {"polyps": 0.6}
 
 
+def verdict_params(fps: float = TARGET_FPS) -> dict:
+    """Time-equivalent verdict settings: a finding must persist ~1 s+ (2 samples at 1 fps), median window ~3 s."""
+    smooth = max(3, int(round(3 * fps)) // 2 * 2 + 1)          # odd window
+    return {"min_run": max(2, int(round(fps)) + 1), "smooth": smooth}
+MAX_FRAMES = 6000
+TOP_HEATMAPS = 5
 
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "model", "vit_model_fp32.onnx")
-GLOBAL_PREDICTOR = predictor(MODEL_PATH)
-GLOBAL_FRAME_SCORER = frame_scoring()
-GLOBAL_VIDEO_SCORER = video_scoring()
-GLOBAL_HEATMAP_GEN = HeatmapGenerator(
-    pth_path=os.path.join(os.path.dirname(__file__), "model", "vit_best.pth")
-)
+_engine = None
+_lock = Lock()
+
+
+def get_engine():
+    """Lazy singleton: the app starts instantly and a missing model gives a clear error, not an import crash."""
+    global _engine
+    with _lock:
+        if _engine is None:
+            pred = Predictor()
+            _engine = {"pred": pred, "heat": HeatmapGenerator(pred), "frames": frame_scoring(), "video": video_scoring()}
+        return _engine
+
+
+def _ensure_ffmpeg():
+    """ffmpeg lookup order: $GASTROVISION_FFMPEG -> bundled next to the app -> PATH -> common Windows folders."""
+    env = os.environ.get("GASTROVISION_FFMPEG")
+    here = os.path.dirname(os.path.abspath(__file__))
+    candidates = [env] if env else []
+    candidates += [os.path.join(here, "ffmpeg", "ffmpeg.exe"), os.path.join(os.path.dirname(here), "ffmpeg", "ffmpeg.exe")]
+    for c in candidates:
+        if c and os.path.exists(c):
+            os.environ["PATH"] = os.path.dirname(c) + os.pathsep + os.environ.get("PATH", "")
+            return c
+    found = shutil.which("ffmpeg")
+    if found:
+        return found
+    for c in (r"C:\ProgramData\chocolatey\bin\ffmpeg.exe", r"C:\ffmpeg\bin\ffmpeg.exe",
+              os.path.join(os.environ.get("LOCALAPPDATA", ""), r"ffmpeg\bin\ffmpeg.exe")):
+        if os.path.exists(c):
+            os.environ["PATH"] = os.path.dirname(c) + os.pathsep + os.environ.get("PATH", "")
+            return c
+    return None
+
+
+def analyze(video_full_path: str) -> dict:
+    """Full analysis. Returns the video summary dict (label, confidence, findings, ...)."""
+    if _ensure_ffmpeg() is None:
+        raise RuntimeError("ffmpeg was not found. Install ffmpeg or set GASTROVISION_FFMPEG.")
+    eng = get_engine()
+    pred, heat = eng["pred"], eng["heat"]
+    video_name = os.path.splitext(os.path.basename(video_full_path))[0]
+    backend_dir = os.path.dirname(os.path.abspath(__file__))
+
+    frames = frame_extractor().extract_frames(video_full_path, "fixed_fps", 5, TARGET_FPS, MAX_FRAMES)
+    names, _, cleaned_dir = frame_selector().select_frames(frames, video_name)
+    if not names:
+        raise RuntimeError("No readable frames could be extracted from this video.")
+    pred.predict(cleaned_dir, video_name, frame_names=names)
+
+    summary = eng["video"].summarize(video_name, conf_threshold=pred.conf_threshold,
+                                     class_thresholds=CLASS_THRESHOLDS, **verdict_params())
+    eng["frames"].compute_stats(video_name, pred.conf_threshold)          # writes frame_ranked.json (kept for the report tools)
+    picks = eng["video"].select_heatmap_frames(summary, video_name, TOP_HEATMAPS)
+    heatmap_dir = os.path.join(paths.outputs_dir(), video_name, "heatmaps")
+
+    def run_heatmaps():
+        heat.generate_batch(cleaned_dir, picks, heatmap_dir, top_n=TOP_HEATMAPS)
+    Thread(target=run_heatmaps, daemon=True).start()
+    return summary
 
 
 def prediction(video_full_path):
-    # Check if ffmpeg is installed
-    ffmpeg_bin = shutil.which("ffmpeg")
-    if ffmpeg_bin is None:
-        # Fallback for common Windows installation paths
-        common_paths = [
-            r"C:\ProgramData\chocolatey\bin\ffmpeg.exe",
-            r"C:\ffmpeg\bin\ffmpeg.exe",
-            os.path.join(os.environ.get("LOCALAPPDATA", ""), r"ffmpeg\bin\ffmpeg.exe"),
-            # Specific path found on user system
-            r"C:\Users\aadit\AppData\Local\ffmpeg-2026-04-26-git-4867d251ad-full_build\ffmpeg-2026-04-26-git-4867d251ad-full_build\bin\ffmpeg.exe"
-        ]
-        for path in common_paths:
-            if os.path.exists(path):
-                ffmpeg_bin = path
-                # Add to PATH so ffmpeg-python can find it
-                os.environ["PATH"] += os.pathsep + os.path.dirname(path)
-                print(f"DEBUG: Found ffmpeg at {path}, added to PATH.")
-                break
-
-    if ffmpeg_bin is None:
-        print("ERROR: ffmpeg binary not found in PATH.")
-        return "Error: ffmpeg not installed", 0
-
-    filename = os.path.basename(video_full_path)
-    video_name = os.path.splitext(filename)[0]
-    video_dir = os.path.dirname(video_full_path)
-
-    # Config parameters
-    blur_threshold = 130
-    dup_threshold = 10
-    conf_threshold = 0.70
-
-    # Convert .avi to .mp4 if needed
-    if video_full_path.endswith(".avi"):
-        new_input_file = os.path.join(video_dir, f'{video_name}.mp4')
-        (
-            ffmpeg
-            .input(video_full_path)
-            .output(new_input_file, vcodec='libx264', crf=23, preset='ultrafast')
-            .run(overwrite_output=True, quiet=True)
-        )
-    else:
-        new_input_file = video_full_path
-
-    # Step 1: Extraction
-    extractor = frame_extractor()
-    frames = extractor.extract_frames(new_input_file, "all", 5, 10, 10000)
-
-    # # Step 2: Selection (blur/duplicate removal)
-    # selector = frame_selector()
-    # _, cleaned_frames = selector.select_frames(frames, video_name, blur_threshold, dup_threshold)
-
-    selector = frame_selector()
-    frame_names, kept_frames, cleaned_frames = selector.select_frames(frames, video_name, blur_threshold, dup_threshold)
-
-    # # Step 3: Prediction
-    # # predictor.predict() signature: (self, cleaned_frames, model, video_name)
-
-    # GLOBAL_PREDICTOR.predict(cleaned_frames, video_name)
-    GLOBAL_PREDICTOR.predict(kept_frames, video_name, frame_names=frame_names)
-
-
-    # # Step 4: Scoring
-    # frame_scorer = frame_scoring()
-    # scoring_result = frame_scorer.compute_stats(video_name, conf_threshold)
-    # ranked = scoring_result["ranked_frames"]
-
-    # video_scorer = video_scoring()
-    # top_label, top_conf = video_scorer.average_confidence(video_name)
-
-    frame_scorer = GLOBAL_FRAME_SCORER
-    scoring_result = frame_scorer.compute_stats(video_name, conf_threshold)
-    ranked = scoring_result["ranked_frames"]
-
-    video_scorer = GLOBAL_VIDEO_SCORER
-    top_label, top_conf = video_scorer.average_confidence(video_name)
-
-    # gen = HeatmapGenerator(pth_path=os.path.join(os.path.dirname(__file__), "model", "vit_model_fp32.pth"))
-
-    # heatmap_dir = os.path.join(os.path.dirname(__file__), "outputs", video_name, "heatmaps")
-    # heatmap_results = gen.generate_batch(
-    #     frame_dir=cleaned_frames,
-    #     frame_results=ranked,
-    #     output_dir=heatmap_dir,
-    #     top_n=5
-    # )
-
-    heatmap_dir = os.path.join(os.path.dirname(__file__), "outputs", video_name, "heatmaps")
-    # heatmap_results = GLOBAL_HEATMAP_GEN.generate_batch(
-    #     frame_dir=cleaned_frames,
-    #     frame_results=ranked,
-    #     output_dir=heatmap_dir,
-    #     top_n=5
-    # )
-
-    heatmap_results = []
-
-    def run_heatmap():
-        results = GLOBAL_HEATMAP_GEN.generate_batch(
-            frame_dir=cleaned_frames,
-            frame_results=ranked,
-            output_dir=heatmap_dir,
-            top_n=5
-        )
-        heatmap_results.extend(results)
-
-    heatmap_thread = Thread(target=run_heatmap, daemon=True)
-    heatmap_thread.start()
-
-
-
-    return top_label, top_conf #, heatmap_results  
+    """Backwards-compatible: (label, confidence)."""
+    try:
+        s = analyze(video_full_path)
+        return s["label"], s["confidence"]
+    except RuntimeError as e:
+        return f"Error: {e}", 0

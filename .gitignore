@@ -37,3 +37,20 @@ env/
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# generated / large artefacts
+backend/outputs/
+backend/uploads/
+tests/fixture_model/
+.pytest_cache/
+*.onnx
+*.onnx.data
+
+# release/build artefacts (never commit these - ffmpeg.exe alone exceeds GitHub's 100 MB file limit)
+packaging/ffmpeg/
+build/
+dist/
+release/
+.build-venv/
+*.exe
+*.spec.bak

@@ -1,13 +1,17 @@
 import sys
 import os
 import requests
+from app_info import VERSION, FEEDBACK_URL, diagnostics
+
+API = f"http://127.0.0.1:{os.environ.get('GASTROVISION_PORT', '8000')}"
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QProgressBar, QFrame, QFileDialog, QGridLayout,
-    QSizePolicy, QScrollArea
+    QSizePolicy, QScrollArea, QMessageBox
 )
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QSize
-from PyQt6.QtGui import QFont, QPixmap, QColor, QPalette, QFontDatabase
+from PyQt6.QtGui import QFont, QPixmap, QColor, QPalette, QFontDatabase, QDesktopServices, QGuiApplication
+from PyQt6.QtCore import QUrl
 
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QSize, QTimer
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
@@ -262,7 +266,7 @@ class AnalysisWorker(QThread):
 
     def run(self):
         try:
-            url = "http://127.0.0.1:8000/predict"
+            url = f"{API}/predict"
             with open(self.image_path, "rb") as f:
                 ext = os.path.splitext(self.image_path)[1].lower()
                 files = {"file": (os.path.basename(self.image_path), f, "video/mp4")}
@@ -273,7 +277,7 @@ class AnalysisWorker(QThread):
             else:
                 self.error.emit(f"Server returned {response.status_code}: {response.text}")
         except requests.exceptions.ConnectionError:
-            self.error.emit("Cannot connect to server.\nMake sure predict_server.py is running on port 8000.")
+            self.error.emit("Cannot connect to server.\nPlease restart GastroVision. If this keeps happening, use Send feedback.")
         except Exception as e:
             self.error.emit(str(e))
 
@@ -307,7 +311,7 @@ LABELS = [
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("GASTROVISION V2.0")
+        self.setWindowTitle(f"GastroVision v{VERSION} - research prototype")
         self.resize(1100, 760)
         self.setMinimumSize(900, 640)
         self.setStyleSheet(QSS)
@@ -339,6 +343,17 @@ class MainWindow(QMainWindow):
         root_layout.addWidget(self._build_body(), 1)
         root_layout.addWidget(self._build_footer())
 
+    def _send_feedback(self):
+        """Copy anonymous diagnostics to the clipboard and open the feedback form."""
+        QGuiApplication.clipboard().setText(diagnostics())
+        QMessageBox.information(
+            self, "Send feedback",
+            "Your browser will open the feedback form.\n\n"
+            "A few technical details (app version, operating system) were copied to your clipboard - "
+            "please paste them into the form.\n\n"
+            "Do NOT upload or describe patient-identifying information.")
+        QDesktopServices.openUrl(QUrl(FEEDBACK_URL))
+
     # ── Header ───────────────────────────────
     def _build_header(self):
         header = QWidget()
@@ -348,14 +363,20 @@ class MainWindow(QMainWindow):
 
         left = QVBoxLayout()
         left.setSpacing(1)
-        title = QLabel("GASTROVISION V2.0")
+        title = QLabel(f"GASTROVISION V{VERSION}")
         title.setObjectName("AppTitle")
-        sub = QLabel("GI DISEASE PREDICTION  //  ONNX INFERENCE ENGINE")
+        sub = QLabel("GI FINDING DETECTION  //  RESEARCH PROTOTYPE")
         sub.setObjectName("AppSubtitle")
         left.addWidget(title)
         left.addWidget(sub)
         hl.addLayout(left)
         hl.addStretch()
+
+        fb = QPushButton("SEND FEEDBACK")
+        fb.setObjectName("ClearBtn")
+        fb.setCursor(Qt.CursorShape.PointingHandCursor)
+        fb.clicked.connect(self._send_feedback)
+        hl.addWidget(fb)
 
         status = QLabel("● SERVER: READY")
         status.setObjectName("StatusDot")
@@ -447,7 +468,7 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
         layout.setSpacing(12)
 
-        t = QLabel("// DIAGNOSTIC OUTPUT")
+        t = QLabel("// ANALYSIS OUTPUT")
         t.setObjectName("SectionTitle")
         layout.addWidget(t)
 
@@ -551,7 +572,7 @@ class MainWindow(QMainWindow):
         fl.setContentsMargins(0, 0, 0, 0)
         fl.setSpacing(0)
 
-        for text in ["READY — SYSTEM_OK: 200", "ViT · Kvasir-v2 Dataset", "ONNX Runtime"]:
+        for text in ["READY — SYSTEM_OK: 200", "EfficientNetV2 · Kvasir + HyperKvasir", "ONNX Runtime", "RESEARCH PROTOTYPE — NOT A MEDICAL DEVICE"]:
             lbl = QLabel(text)
             lbl.setObjectName("FooterLabel")
             sep = QFrame()
@@ -561,7 +582,7 @@ class MainWindow(QMainWindow):
             fl.addWidget(sep)
 
         fl.addStretch()
-        ver = QLabel("v2.0 — GASTROVISION")
+        ver = QLabel(f"v{VERSION} — GASTROVISION")
         ver.setObjectName("FooterLabel")
         fl.addWidget(ver)
         return footer
@@ -643,14 +664,19 @@ class MainWindow(QMainWindow):
     def _poll_heatmaps(self, filename):
         video_name = os.path.splitext(filename)[0]
         try:
-            resp = requests.get(f"http://127.0.0.1:8000/heatmaps/{video_name}", timeout=2)
+            resp = requests.get(f"{API}/heatmaps/{video_name}", timeout=2)
             if resp.status_code == 200:
-                paths = resp.json().get("heatmap_paths", [])
-                if len(paths) >= 5:  # all 5 heatmaps ready
+                body = resp.json()
+                paths = body.get("heatmap_paths", [])
+                if body.get("done") or len(paths) >= 5:  # finished (possibly with fewer than 5)
                     self._heatmap_poll_timer.stop()
-                    self._preview_frames = paths
-                    self._preview_idx = 0
-                    self._preview_timer.start(1500)
+                    if paths:
+                        self._preview_frames = paths
+                        self._preview_idx = 0
+                        self._preview_timer.start(1500)
+                    else:
+                        self._preview_timer.stop()
+                        self.placeholder_label.setText("NO HEATMAPS (NO FINDING)")
         except Exception:
             pass
 
@@ -798,7 +824,20 @@ class MainWindow(QMainWindow):
         self.result_sub.show()
         self.error_label.hide()
 
-        self.confidence_label.setText(f"CONFIDENCE: {confidence * 100:.2f}%")
+        if prediction == "no-finding":
+            unc = result.get("uncertain_fraction", 1.0)
+            self.confidence_label.setText(
+                f"NO CONSISTENT FINDING  ({unc * 100:.0f}% OF FRAMES UNCERTAIN / NON-TARGET)\n"
+                "NOT A CLEARANCE: THE MODEL ONLY KNOWS 8 FINDINGS")
+        else:
+            txt = f"MEAN CONFIDENCE: {confidence * 100:.1f}%"
+            fl = result.get("findings", []) or []
+            if fl and fl[0].get("strength") == "possible":
+                txt += "\nPOSSIBLE FINDING - BELOW THE STANDARD CONFIDENCE BAR, PLEASE REVIEW"
+            if len(fl) > 1:
+                txt += "\nALSO SEEN: " + ", ".join(
+                    f"{f['class'].upper()}" + (" (POSSIBLE)" if f.get("strength") == "possible" else "") for f in fl[1:])
+            self.confidence_label.setText(txt)
         self.confidence_label.show()
 
         # Highlight matching chip

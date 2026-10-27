@@ -1,0 +1,931 @@
+{
+  "smoke_run": false,
+  "n_train": 15767,
+  "n_val": 3992,
+  "n_test": 4060,
+  "test_accuracy": 0.8438423645320197,
+  "test_macro_f1": 0.8600015158707,
+  "test_accuracy_tta": 0.8423645320197044,
+  "test_accuracy_degraded": 0.8344827586206897,
+  "temperature": 0.8788700103759766,
+  "ece_after": 0.02959426980683534,
+  "conf_threshold": 0.8,
+  "selective_test": [
+    {
+      "threshold": 0.5,
+      "coverage": 0.9509851932525635,
+      "accuracy_on_kept": 0.8601398468017578
+    },
+    {
+      "threshold": 0.55,
+      "coverage": 0.9197044372558594,
+      "accuracy_on_kept": 0.8711836934089661
+    },
+    {
+      "threshold": 0.6,
+      "coverage": 0.8967980146408081,
+      "accuracy_on_kept": 0.8813512921333313
+    },
+    {
+      "threshold": 0.65,
+      "coverage": 0.867241382598877,
+      "accuracy_on_kept": 0.8934961557388306
+    },
+    {
+      "threshold": 0.7,
+      "coverage": 0.8357142806053162,
+      "accuracy_on_kept": 0.9042145609855652
+    },
+    {
+      "threshold": 0.75,
+      "coverage": 0.7990148067474365,
+      "accuracy_on_kept": 0.9133785367012024
+    },
+    {
+      "threshold": 0.8,
+      "coverage": 0.7504926323890686,
+      "accuracy_on_kept": 0.9274696707725525
+    },
+    {
+      "threshold": 0.85,
+      "coverage": 0.676354706287384,
+      "accuracy_on_kept": 0.9399126172065735
+    },
+    {
+      "threshold": 0.9,
+      "coverage": 0.5211822390556335,
+      "accuracy_on_kept": 0.960302472114563
+    },
+    {
+      "threshold": 0.95,
+      "coverage": 0.115024633705616,
+      "accuracy_on_kept": 0.9871520400047302
+    }
+  ],
+  "per_class": {
+    "dyed-lifted-polyps": {
+      "precision": 0.8003992015968064,
+      "recall": 0.8871681415929203,
+      "f1-score": 0.8415529905561385,
+      "support": 904.0
+    },
+    "dyed-resection-margins": {
+      "precision": 0.8119266055045872,
+      "recall": 0.7814569536423841,
+      "f1-score": 0.796400449943757,
+      "support": 453.0
+    },
+    "esophagitis": {
+      "precision": 0.851145038167939,
+      "recall": 0.902834008097166,
+      "f1-score": 0.8762278978388998,
+      "support": 247.0
+    },
+    "normal-cecum": {
+      "precision": 0.9235127478753541,
+      "recall": 0.9848942598187311,
+      "f1-score": 0.9532163742690059,
+      "support": 331.0
+    },
+    "normal-pylorus": {
+      "precision": 0.9744408945686901,
+      "recall": 0.9131736526946108,
+      "f1-score": 0.9428129829984544,
+      "support": 334.0
+    },
+    "normal-z-line": {
+      "precision": 0.8138801261829653,
+      "recall": 0.9020979020979021,
+      "f1-score": 0.8557213930348259,
+      "support": 286.0
+    },
+    "polyps": {
+      "precision": 0.8925501432664756,
+      "recall": 0.675704989154013,
+      "f1-score": 0.7691358024691358,
+      "support": 922.0
+    },
+    "ulcerative-colitis": {
+      "precision": 0.9698996655518395,
+      "recall": 0.9508196721311475,
+      "f1-score": 0.9602649006622517,
+      "support": 305.0
+    },
+    "other": {
+      "precision": 0.6447368421052632,
+      "recall": 0.8812949640287769,
+      "f1-score": 0.7446808510638298,
+      "support": 278.0
+    },
+    "accuracy": 0.8438423645320197,
+    "macro avg": {
+      "precision": 0.8536101405355467,
+      "recall": 0.875493838139739,
+      "f1-score": 0.8600015158707,
+      "support": 4060.0
+    },
+    "weighted avg": {
+      "precision": 0.8530787245260714,
+      "recall": 0.8438423645320197,
+      "f1-score": 0.84289589996065,
+      "support": 4060.0
+    }
+  },
+  "heatmap_validation": {
+    "evaluated": 0,
+    "pointing_game": null,
+    "mean_iou_at_50pct": null,
+    "random_baseline_pointing": null
+  },
+  "group_similarity_threshold": 0.95,
+  "video_eval": {
+    "n_videos": 46,
+    "detection_rate": 1.0,
+    "headline_accuracy": 0.9782608695652174,
+    "mean_false_findings_per_video": 0.17391304347826086,
+    "per_video": [
+      {
+        "video": "15aba7e4",
+        "truth": "dyed-lifted-polyps",
+        "n_frames": 40,
+        "headline": "dyed-lifted-polyps",
+        "detected": [
+          "dyed-lifted-polyps"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "dyed-lifted-polyps": 37,
+          "dyed-resection-margins": 3
+        }
+      },
+      {
+        "video": "1c9578a7",
+        "truth": "dyed-lifted-polyps",
+        "n_frames": 40,
+        "headline": "dyed-lifted-polyps",
+        "detected": [
+          "dyed-lifted-polyps"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "dyed-lifted-polyps": 38,
+          "dyed-resection-margins": 2
+        }
+      },
+      {
+        "video": "1de3ef0f",
+        "truth": "dyed-lifted-polyps",
+        "n_frames": 40,
+        "headline": "dyed-lifted-polyps",
+        "detected": [
+          "dyed-lifted-polyps"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "dyed-lifted-polyps": 39,
+          "dyed-resection-margins": 1
+        }
+      },
+      {
+        "video": "26833e6c",
+        "truth": "dyed-lifted-polyps",
+        "n_frames": 40,
+        "headline": "dyed-lifted-polyps",
+        "detected": [
+          "dyed-lifted-polyps"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "dyed-lifted-polyps": 40
+        }
+      },
+      {
+        "video": "26c197fc",
+        "truth": "dyed-lifted-polyps",
+        "n_frames": 40,
+        "headline": "dyed-lifted-polyps",
+        "detected": [
+          "dyed-lifted-polyps"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "dyed-lifted-polyps": 38,
+          "dyed-resection-margins": 2
+        }
+      },
+      {
+        "video": "4c0cae22",
+        "truth": "dyed-lifted-polyps",
+        "n_frames": 11,
+        "headline": "dyed-lifted-polyps",
+        "detected": [
+          "dyed-lifted-polyps"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "dyed-lifted-polyps": 11
+        }
+      },
+      {
+        "video": "5b2f37fb",
+        "truth": "dyed-lifted-polyps",
+        "n_frames": 30,
+        "headline": "dyed-lifted-polyps",
+        "detected": [
+          "dyed-lifted-polyps"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "dyed-lifted-polyps": 28,
+          "dyed-resection-margins": 2
+        }
+      },
+      {
+        "video": "5c5b3692",
+        "truth": "dyed-lifted-polyps",
+        "n_frames": 40,
+        "headline": "dyed-lifted-polyps",
+        "detected": [
+          "dyed-lifted-polyps"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "dyed-lifted-polyps": 37,
+          "dyed-resection-margins": 3
+        }
+      },
+      {
+        "video": "7d8e1601",
+        "truth": "dyed-lifted-polyps",
+        "n_frames": 12,
+        "headline": "dyed-lifted-polyps",
+        "detected": [
+          "dyed-lifted-polyps"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "dyed-lifted-polyps": 12
+        }
+      },
+      {
+        "video": "823e4779",
+        "truth": "dyed-lifted-polyps",
+        "n_frames": 40,
+        "headline": "dyed-lifted-polyps",
+        "detected": [
+          "dyed-lifted-polyps"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "dyed-lifted-polyps": 39,
+          "dyed-resection-margins": 1
+        }
+      },
+      {
+        "video": "89a4fc64",
+        "truth": "dyed-resection-margins",
+        "n_frames": 40,
+        "headline": "dyed-resection-margins",
+        "detected": [
+          "dyed-resection-margins",
+          "dyed-lifted-polyps"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 1,
+        "frame_argmax": {
+          "dyed-resection-margins": 33,
+          "dyed-lifted-polyps": 7
+        }
+      },
+      {
+        "video": "8db217ce",
+        "truth": "dyed-resection-margins",
+        "n_frames": 40,
+        "headline": "dyed-resection-margins",
+        "detected": [
+          "dyed-resection-margins"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "dyed-resection-margins": 39,
+          "dyed-lifted-polyps": 1
+        }
+      },
+      {
+        "video": "97761917",
+        "truth": "dyed-resection-margins",
+        "n_frames": 40,
+        "headline": "dyed-resection-margins",
+        "detected": [
+          "dyed-resection-margins"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "dyed-resection-margins": 38,
+          "dyed-lifted-polyps": 2
+        }
+      },
+      {
+        "video": "c0c92730",
+        "truth": "dyed-resection-margins",
+        "n_frames": 18,
+        "headline": "dyed-resection-margins",
+        "detected": [
+          "dyed-resection-margins",
+          "dyed-lifted-polyps"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 1,
+        "frame_argmax": {
+          "dyed-resection-margins": 14,
+          "dyed-lifted-polyps": 4
+        }
+      },
+      {
+        "video": "d711a386",
+        "truth": "dyed-resection-margins",
+        "n_frames": 40,
+        "headline": "dyed-resection-margins",
+        "detected": [
+          "dyed-resection-margins"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "dyed-resection-margins": 40
+        }
+      },
+      {
+        "video": "ee095f18",
+        "truth": "dyed-resection-margins",
+        "n_frames": 40,
+        "headline": "dyed-resection-margins",
+        "detected": [
+          "dyed-resection-margins",
+          "dyed-lifted-polyps"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 1,
+        "frame_argmax": {
+          "dyed-resection-margins": 37,
+          "dyed-lifted-polyps": 3
+        }
+      },
+      {
+        "video": "3e49de45",
+        "truth": "dyed-resection-margins",
+        "n_frames": 20,
+        "headline": "dyed-resection-margins",
+        "detected": [
+          "dyed-resection-margins"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "dyed-resection-margins": 20
+        }
+      },
+      {
+        "video": "82c2fcb2",
+        "truth": "dyed-resection-margins",
+        "n_frames": 20,
+        "headline": "dyed-resection-margins",
+        "detected": [
+          "dyed-resection-margins"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "dyed-resection-margins": 20
+        }
+      },
+      {
+        "video": "bf35876d",
+        "truth": "dyed-resection-margins",
+        "n_frames": 20,
+        "headline": "dyed-resection-margins",
+        "detected": [
+          "dyed-resection-margins"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "dyed-resection-margins": 20
+        }
+      },
+      {
+        "video": "d4f2b62f",
+        "truth": "dyed-resection-margins",
+        "n_frames": 20,
+        "headline": "dyed-resection-margins",
+        "detected": [
+          "dyed-resection-margins"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "dyed-resection-margins": 20
+        }
+      },
+      {
+        "video": "4fc1a16d",
+        "truth": "dyed-resection-margins",
+        "n_frames": 17,
+        "headline": "dyed-resection-margins",
+        "detected": [
+          "dyed-resection-margins"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "dyed-resection-margins": 15,
+          "dyed-lifted-polyps": 2
+        }
+      },
+      {
+        "video": "8ca9db2d",
+        "truth": "esophagitis",
+        "n_frames": 20,
+        "headline": "esophagitis",
+        "detected": [
+          "esophagitis",
+          "dyed-resection-margins"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 1,
+        "frame_argmax": {
+          "dyed-resection-margins": 11,
+          "esophagitis": 8,
+          "normal-z-line": 1
+        }
+      },
+      {
+        "video": "a9abfe79",
+        "truth": "esophagitis",
+        "n_frames": 20,
+        "headline": "esophagitis",
+        "detected": [
+          "esophagitis"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "esophagitis": 19,
+          "normal-z-line": 1
+        }
+      },
+      {
+        "video": "da5d2629",
+        "truth": "esophagitis",
+        "n_frames": 20,
+        "headline": "esophagitis",
+        "detected": [
+          "esophagitis"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "esophagitis": 18,
+          "normal-z-line": 2
+        }
+      },
+      {
+        "video": "1604ddda",
+        "truth": "esophagitis",
+        "n_frames": 40,
+        "headline": "esophagitis",
+        "detected": [
+          "esophagitis"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "esophagitis": 32,
+          "normal-z-line": 8
+        }
+      },
+      {
+        "video": "2bf8d4ba",
+        "truth": "esophagitis",
+        "n_frames": 40,
+        "headline": "esophagitis",
+        "detected": [
+          "esophagitis"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "esophagitis": 37,
+          "normal-z-line": 3
+        }
+      },
+      {
+        "video": "37ecf2c6",
+        "truth": "esophagitis",
+        "n_frames": 40,
+        "headline": "esophagitis",
+        "detected": [
+          "esophagitis",
+          "normal-z-line"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 1,
+        "frame_argmax": {
+          "esophagitis": 34,
+          "normal-z-line": 5,
+          "normal-cecum": 1
+        }
+      },
+      {
+        "video": "3d25579b",
+        "truth": "normal-cecum",
+        "n_frames": 40,
+        "headline": "normal-cecum",
+        "detected": [
+          "normal-cecum"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "normal-cecum": 38,
+          "dyed-lifted-polyps": 1,
+          "polyps": 1
+        }
+      },
+      {
+        "video": "52cf5162",
+        "truth": "normal-cecum",
+        "n_frames": 40,
+        "headline": "normal-cecum",
+        "detected": [
+          "normal-cecum"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "normal-cecum": 40
+        }
+      },
+      {
+        "video": "5aebb6b7",
+        "truth": "normal-cecum",
+        "n_frames": 26,
+        "headline": "normal-cecum",
+        "detected": [
+          "normal-cecum"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "normal-cecum": 26
+        }
+      },
+      {
+        "video": "6a2a53d3",
+        "truth": "normal-cecum",
+        "n_frames": 40,
+        "headline": "normal-cecum",
+        "detected": [
+          "normal-cecum"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "normal-cecum": 40
+        }
+      },
+      {
+        "video": "7b70dd34",
+        "truth": "normal-pylorus",
+        "n_frames": 40,
+        "headline": "normal-pylorus",
+        "detected": [
+          "normal-pylorus",
+          "normal-cecum"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 1,
+        "frame_argmax": {
+          "normal-pylorus": 23,
+          "normal-cecum": 17
+        }
+      },
+      {
+        "video": "921719e4",
+        "truth": "normal-pylorus",
+        "n_frames": 40,
+        "headline": "normal-pylorus",
+        "detected": [
+          "normal-pylorus"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "normal-pylorus": 40
+        }
+      },
+      {
+        "video": "9fd95b39",
+        "truth": "normal-pylorus",
+        "n_frames": 40,
+        "headline": "normal-pylorus",
+        "detected": [
+          "normal-pylorus"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "normal-pylorus": 40
+        }
+      },
+      {
+        "video": "afb55b80",
+        "truth": "normal-pylorus",
+        "n_frames": 40,
+        "headline": "normal-pylorus",
+        "detected": [
+          "normal-pylorus"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "normal-pylorus": 40
+        }
+      },
+      {
+        "video": "b0024c29",
+        "truth": "normal-z-line",
+        "n_frames": 31,
+        "headline": "normal-pylorus",
+        "detected": [
+          "normal-pylorus",
+          "normal-z-line"
+        ],
+        "hit": true,
+        "headline_correct": false,
+        "false_findings": 1,
+        "frame_argmax": {
+          "normal-pylorus": 25,
+          "normal-z-line": 5,
+          "esophagitis": 1
+        }
+      },
+      {
+        "video": "b2071b4e",
+        "truth": "normal-z-line",
+        "n_frames": 26,
+        "headline": "normal-z-line",
+        "detected": [
+          "normal-z-line"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "normal-z-line": 20,
+          "esophagitis": 6
+        }
+      },
+      {
+        "video": "d8998f3e",
+        "truth": "normal-z-line",
+        "n_frames": 40,
+        "headline": "normal-z-line",
+        "detected": [
+          "normal-z-line"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "normal-z-line": 36,
+          "esophagitis": 4
+        }
+      },
+      {
+        "video": "e076411e",
+        "truth": "normal-z-line",
+        "n_frames": 40,
+        "headline": "normal-z-line",
+        "detected": [
+          "normal-z-line"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "normal-z-line": 35,
+          "esophagitis": 5
+        }
+      },
+      {
+        "video": "19f60cad",
+        "truth": "normal-z-line",
+        "n_frames": 40,
+        "headline": "normal-z-line",
+        "detected": [
+          "normal-z-line"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "normal-z-line": 40
+        }
+      },
+      {
+        "video": "b5c6dbd7",
+        "truth": "polyps",
+        "n_frames": 30,
+        "headline": "polyps",
+        "detected": [
+          "polyps",
+          "normal-z-line"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 1,
+        "frame_argmax": {
+          "polyps": 15,
+          "normal-z-line": 12,
+          "esophagitis": 2
+        }
+      },
+      {
+        "video": "c16574fb",
+        "truth": "polyps",
+        "n_frames": 17,
+        "headline": "polyps",
+        "detected": [
+          "polyps"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "polyps": 16,
+          "ulcerative-colitis": 1
+        }
+      },
+      {
+        "video": "f2c72cfa",
+        "truth": "polyps",
+        "n_frames": 36,
+        "headline": "polyps",
+        "detected": [
+          "polyps"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "polyps": 36
+        }
+      },
+      {
+        "video": "f7329df7",
+        "truth": "polyps",
+        "n_frames": 12,
+        "headline": "polyps",
+        "detected": [
+          "polyps"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "polyps": 12
+        }
+      },
+      {
+        "video": "90b2571d",
+        "truth": "polyps",
+        "n_frames": 40,
+        "headline": "polyps",
+        "detected": [
+          "polyps"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "polyps": 38,
+          "dyed-lifted-polyps": 1,
+          "ulcerative-colitis": 1
+        }
+      },
+      {
+        "video": "512722d1",
+        "truth": "polyps",
+        "n_frames": 40,
+        "headline": "polyps",
+        "detected": [
+          "polyps"
+        ],
+        "hit": true,
+        "headline_correct": true,
+        "false_findings": 0,
+        "frame_argmax": {
+          "polyps": 37,
+          "normal-pylorus": 2,
+          "ulcerative-colitis": 1
+        }
+      }
+    ]
+  },
+  "external_videos": [
+    {
+      "video": "16e7e461",
+      "truth": "polyps",
+      "n_frames": 8,
+      "headline": "no-finding",
+      "detected": [],
+      "hit": false,
+      "headline_correct": false,
+      "false_findings": 0,
+      "frame_argmax": {
+        "other": 7,
+        "polyps": 1
+      }
+    },
+    {
+      "video": "29ce8d04",
+      "truth": "polyps",
+      "n_frames": 6,
+      "headline": "polyps",
+      "detected": [
+        "polyps"
+      ],
+      "hit": true,
+      "headline_correct": true,
+      "false_findings": 0,
+      "frame_argmax": {
+        "polyps": 6
+      }
+    },
+    {
+      "video": "2a200509",
+      "truth": "polyps",
+      "n_frames": 161,
+      "headline": "no-finding",
+      "detected": [],
+      "hit": false,
+      "headline_correct": false,
+      "false_findings": 0,
+      "frame_argmax": {
+        "other": 136,
+        "polyps": 24,
+        "dyed-resection-margins": 1
+      }
+    }
+  ],
+  "has_other_class": true,
+  "old_vit_reference": "94.5% on an image-level random val split (not leakage-controlled)"
+}
