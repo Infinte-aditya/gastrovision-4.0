@@ -6,8 +6,8 @@ import sys
 
 VERSION = "4.0.0"
 # Links used by the "Send feedback" button and the website.
-FEEDBACK_URL = "https://github.com/Infinte-aditya/gastrovision-3.0/issues/new/choose"
-WEBSITE_URL = "https://infinte-aditya.github.io/gastrovision-3.0/"
+FEEDBACK_URL = "https://github.com/Infinte-aditya/gastrovision-4.0/issues/new/choose"
+WEBSITE_URL = "https://infinte-aditya.github.io/gastrovision-4.0/"
 
 
 def _model_info() -> dict:

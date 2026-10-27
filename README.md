@@ -70,6 +70,6 @@ tests/     pytest suite (synthetic fixture model; plus real-model test when the 
 Database/  optional Postgres scaffolding (not used by the prototype)
 ```
 
-## Releasing a packaged Windows app
+## Packaging a release (maintainers)
 
-See `RELEASING.md` (PyInstaller + Inno Setup + GitHub Releases + `website/index.html`).
+See `RELEASING.md` (PyInstaller + Inno Setup + GitHub Releases + `docs/index.html`).

@@ -41,5 +41,5 @@
 * `launcher.py`: one-click start (engine + window); picks a free port; shows an error if the model fails to load.
 * `backend/paths.py`: all writes go to `%LOCALAPPDATA%\GastroVision` when installed; old results pruned after 7 days.
 * In-app **Send feedback** button (copies anonymous diagnostics to the clipboard, opens the form); version shown in title/header/footer.
-* `packaging/` (PyInstaller spec, Windows build script, Inno Setup installer) and `website/index.html`; see `RELEASING.md`.
+* `packaging/` (PyInstaller spec, Windows build script, Inno Setup installer) and `docs/index.html`; see `RELEASING.md`.
 * Verified on Linux: frozen build starts, loads the model and returns real predictions; Windows installer must be built on Windows.
