@@ -3,83 +3,173 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>GastroVision – endoscopy video analysis (research prototype)</title>
-<meta name="description" content="A free desktop research tool that scans gastrointestinal endoscopy videos, flags what it sees consistently and shows where it looked. Runs offline on your computer.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%AC%3C/text%3E%3C/svg%3E">
+<title>GastroVision: endoscopy video analysis for research</title>
+<meta name="description" content="Free Windows program that samples an endoscopy video, classifies each frame with an EfficientNetV2 model and shows heatmaps of where the model looked. Runs offline. Research prototype, not a medical device.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f6f8f9;--surface:#fff;--ink:#14212b;--muted:#5a6b78;--line:#dde4e8;--accent:#0f766e;--accent-ink:#fff;--warn-bg:#fff7e6;--warn-line:#f0d9a8;--warn-ink:#6b4b00;color-scheme:light}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e161c;--surface:#15212a;--ink:#e8eef2;--muted:#9fb0bc;--line:#26343e;--accent:#2dd4bf;--accent-ink:#06201c;--warn-bg:#2a2412;--warn-line:#5a4a1c;--warn-ink:#f1d58a;color-scheme:dark}}
-:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-*,*::before,*::after{box-sizing:inherit}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-.wrap{max-width:960px;margin:0 auto;padding:0 22px}
-nav{display:flex;justify-content:space-between;align-items:center;padding:18px 0}
-.brand{font-weight:700;letter-spacing:.02em}.brand span{color:var(--accent)}
-nav a.link{color:var(--muted);text-decoration:none;margin-left:22px;font-size:15px}nav a.link:hover{color:var(--ink)}
-.hero{padding:56px 0 36px}
-h1{font:700 clamp(2rem,5vw,3.2rem)/1.12 Georgia,"Times New Roman",serif;margin:0 0 16px;letter-spacing:-.01em}
-.lead{font-size:1.15rem;color:var(--muted);max-width:620px;margin:0 0 28px}
-.btn{display:inline-block;background:var(--accent);color:var(--accent-ink);padding:14px 26px;border-radius:12px;font-weight:600;text-decoration:none}
-.btn:hover{filter:brightness(1.08)}
-.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);margin-left:10px}
-.meta{margin-top:14px;font-size:13.5px;color:var(--muted)}.meta code{background:var(--surface);border:1px solid var(--line);padding:1px 6px;border-radius:6px;word-break:break-all}
-.warn{background:var(--warn-bg);border:1px solid var(--warn-line);color:var(--warn-ink);border-radius:12px;padding:14px 18px;margin:26px 0;font-size:15px}
-section{padding:34px 0}
-h2{font:700 1.5rem/1.2 Georgia,serif;margin:0 0 18px}
-.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
-.card b{display:block;margin-bottom:6px}.card p{margin:0;color:var(--muted);font-size:15px}
-.num{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:14px;margin-bottom:10px}
-.chips{display:flex;flex-wrap:wrap;gap:8px}.chips span{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:14px}
-.tablewrap{overflow-x:auto}table{border-collapse:collapse;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
-th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);font-size:15px}th{color:var(--muted);font-weight:600}tr:last-child td{border-bottom:0}
-.small{color:var(--muted);font-size:14px;margin-top:12px}
-.cta{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:32px;text-align:center}
-.cta p{color:var(--muted);max-width:520px;margin:0 auto 20px}
-footer{border-top:1px solid var(--line);margin-top:40px;padding:26px 0 40px;color:var(--muted);font-size:13.5px}
-@media (max-width:560px){.btn.ghost{margin:10px 0 0}}
+:root{
+  --paper:#ffffff; --wash:#eef3f6; --ink:#16232d; --muted:#556572; --rule:#d5dde3;
+  --link:#0b6477; --btn:#0b6477; --btn-ink:#fff;
+  --caution:#9a5b00; --caution-bg:#fff6e5;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#10191f; --wash:#17232b; --ink:#e6edf1; --muted:#9aabb6; --rule:#2a3943;
+    --link:#5cc7dc; --btn:#5cc7dc; --btn-ink:#08202a;
+    --caution:#f0c36a; --caution-bg:#2a2314;
+    color-scheme:dark;
+  }
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:1rem}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font:1.0625rem/1.65 "Atkinson Hyperlegible","Segoe UI",sans-serif}
+a{color:var(--link);text-underline-offset:.18em}
+a:focus-visible,.btn:focus-visible{outline:3px solid var(--link);outline-offset:3px}
+
+.col{max-width:62rem;margin:0 auto;padding:0 1.25rem}
+.col>*{max-width:40rem}
+.wide{max-width:62rem;margin:0 auto;padding:0 1.25rem}
+
+header.top{display:flex;justify-content:space-between;align-items:baseline;
+  max-width:62rem;margin:0 auto;padding:1.25rem 1.25rem 0}
+.wordmark{font-weight:700;font-size:1.15rem;color:var(--ink);text-decoration:none}
+header.top nav a{margin-left:1.4rem;color:var(--muted);font-size:.98rem}
+
+h1{font-size:clamp(2rem,4.4vw,2.7rem);line-height:1.15;letter-spacing:-.015em;font-weight:700;
+  margin:3.5rem 0 1.1rem}
+h2{font-size:1.45rem;line-height:1.25;font-weight:700;margin:3.4rem 0 .8rem;letter-spacing:-.005em}
+p{margin:0 0 1rem}
+.lead{font-size:1.2rem;line-height:1.6;color:var(--muted)}
+
+.get{margin:1.8rem 0 .6rem}
+.btn{display:inline-block;background:var(--btn);color:var(--btn-ink);font-weight:700;
+  padding:.8rem 1.4rem;border-radius:4px;text-decoration:none}
+.btn:hover{filter:brightness(1.1)}
+.fine{font-size:.94rem;color:var(--muted);margin:.4rem 0 0}
+.hash{overflow-wrap:anywhere}
+
+.caution{border-left:4px solid var(--caution);background:var(--caution-bg);
+  padding:.9rem 1.1rem;margin:2rem 0 0}
+.caution p{margin:0}
+
+.hero{display:grid;gap:0 3rem;align-items:start}
+@media (min-width:62rem){.hero{grid-template-columns:minmax(0,31rem) minmax(0,1fr)}.hero figure{margin-top:3.9rem}}
+figure{margin:2.6rem 0 0}
+figure img{display:block;width:100%;height:auto;border:1px solid var(--rule);border-radius:6px}
+figcaption{font-size:.94rem;color:var(--muted);margin-top:.6rem;max-width:40rem}
+
+ol,ul{padding-left:1.3rem;margin:0 0 1rem}
+li{margin-bottom:.55rem}
+
+.classes{columns:2;column-gap:2rem;list-style:none;padding:0}
+.classes li{break-inside:avoid;margin-bottom:.3rem}
+
+.tablewrap{overflow-x:auto;margin:1.2rem 0}
+table{border-collapse:collapse;width:100%;min-width:26rem}
+th,td{text-align:left;padding:.6rem .9rem .6rem 0;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:700;color:var(--muted);font-size:.94rem}
+td:last-child{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+code{font-family:Consolas,"Cascadia Mono",monospace;font-size:.9em;background:var(--wash);
+  padding:.08em .35em;border-radius:3px;overflow-wrap:anywhere}
+
+.cta{background:var(--wash);margin-top:4rem;padding:2.6rem 0}
+.cta h2{margin-top:0}
+
+footer{padding:2rem 0 3rem;color:var(--muted);font-size:.92rem}
+footer p{margin-bottom:.5rem}
+
+@media (max-width:560px){
+  h1{margin-top:2.4rem}
+  .classes{columns:1}
+  header.top nav a{margin-left:1rem}
+}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
 </style>
 </head>
 <body>
-<div class="wrap">
-<nav><div class="brand">Gastro<span>Vision</span></div>
-<div><a class="link" href="#how">How it works</a><a class="link" href="#numbers">Numbers</a><a class="link" href="#feedback">Feedback</a></div></nav>
 
-<header class="hero">
-<h1>See what the model saw, frame by frame.</h1>
-<p class="lead">GastroVision is a free desktop research tool for gastrointestinal endoscopy videos. It reports which findings it sees consistently over time and highlights the image regions behind each decision. It runs fully offline on your own computer.</p>
-<a class="btn" href="https://github.com/Infinte-aditya/gastrovision-4.0/releases/latest/download/GastroVision-Setup-4.0.0.exe">Download for Windows · v4.0.0</a>
-<a class="btn ghost" href="https://github.com/Infinte-aditya/gastrovision-4.0/releases/latest">All downloads</a>
-<p class="meta">Windows 10/11, 64-bit · about 250 MB · SHA-256: <code>PASTE-HASH-HERE</code></p>
-<div class="warn"><strong>Research prototype – not a medical device.</strong> It has not been validated for clinical use and must never inform diagnosis or treatment. “No finding” does not mean a video is normal.</div>
+<header class="top">
+  <a class="wordmark" href="#">GastroVision</a>
+  <nav><a href="#process">How it works</a><a href="#accuracy">Accuracy</a><a href="#privacy">Your data</a><a href="#feedback">Feedback</a></nav>
 </header>
 
-<section id="how"><h2>How it works</h2>
-<div class="grid">
-<div class="card"><span class="num">1</span><b>Choose a video</b><p>Open an endoscopy clip (.mp4, .avi, .mov). Nothing is uploaded – analysis happens on your machine.</p></div>
-<div class="card"><span class="num">2</span><b>Run the analysis</b><p>Frames are cleaned, classified by an EfficientNetV2 model and checked for findings that persist over several seconds.</p></div>
-<div class="card"><span class="num">3</span><b>Review the evidence</b><p>See the verdict, a confidence figure, “possible” flags for weaker signals, and heatmaps of where the model looked.</p></div>
-</div></section>
+<main>
+<div class="wide hero">
+<div class="hero-text">
+  <h1>Scan an endoscopy video and see which frames the answer came from</h1>
+  <p class="lead">GastroVision is a free Windows program for researchers. It takes one frame per second from a video, classifies each frame with an EfficientNetV2 model trained on HyperKvasir, and reports a finding only when it shows up in consecutive frames. The video never leaves your computer.</p>
 
-<section><h2>What it looks for</h2>
-<div class="chips"><span>Polyps</span><span>Dyed-lifted polyps</span><span>Dyed resection margins</span><span>Esophagitis</span><span>Ulcerative colitis</span><span>Normal z-line</span><span>Normal pylorus</span><span>Normal cecum</span></div>
-<p class="small">Trained on the public HyperKvasir dataset (Borgli et al., 2020).</p></section>
+  <p class="get"><a class="btn" href="https://github.com/Infinte-aditya/gastrovision-4.0/releases/latest/download/GastroVision-Setup-4.0.0.exe">Download GastroVision 4.0.0 for Windows</a></p>
+  <p class="fine">Windows 10 or 11, 64-bit, about 250 MB. <a href="https://github.com/Infinte-aditya/gastrovision-4.0/releases/latest">Other downloads on GitHub</a>.</p>
+  <p class="fine hash">SHA-256: <code>PASTE-HASH-HERE</code></p>
 
-<section id="numbers"><h2>Honest numbers</h2>
-<div class="tablewrap"><table>
-<tr><th>Measurement (held-out data)</th><th>Result</th></tr>
-<tr><td>Single frames, all types</td><td>84.4% correct</td></tr>
-<tr><td>Still photographs</td><td>95%</td></tr>
-<tr><td>Frames taken from videos</td><td>66%</td></tr>
-<tr><td>Whole videos: labelled finding detected</td><td>65–80% across two held-out video sets</td></tr>
-</table></div>
-<p class="small">Video analysis is the weak spot, especially for polyps. That is exactly why your feedback matters.</p></section>
-
-<section id="feedback"><div class="cta"><h2>Help improve version 5</h2>
-<p>Tell us what worked, what was wrong and what felt confusing. In the app, press <strong>Send feedback</strong>, or use the form below. Please never share patient-identifying information.</p>
-<a class="btn" href="https://github.com/Infinte-aditya/gastrovision-4.0/issues/new/choose">Share feedback</a></div></section>
-
-<footer>© 2026 Aditya Verma · GastroVision v4.0.0 · Provided “as is”, without warranty. Video decoding uses <a href="https://ffmpeg.org" style="color:inherit">FFmpeg</a>. The installer is not code-signed: if Windows SmartScreen appears, choose <em>More info → Run anyway</em>.</footer>
+  <div class="caution">
+    <p><strong>Research prototype, not a medical device.</strong> It has not been validated for clinical use. Do not use it for diagnosis or treatment decisions. “No finding” does not mean a video is normal.</p>
+  </div>
 </div>
+  <figure>
+    <img src="screenshot.png" width="1100" height="720" alt="GastroVision window after analysing a colitis video: the verdict ulcerative colitis with 85.3% mean confidence on the right, and a heatmap frame from the video on the left" onerror="this.closest('figure').hidden=true">
+    <figcaption>The window after analysing a colitis clip. Right: the verdict, mean confidence and other findings seen. Left: one of the heatmap frames, with warmer colours where the model looked.</figcaption>
+  </figure>
+</div>
+
+<div class="col">
+  <h2 id="process">What happens when you press Analyse</h2>
+  <ol>
+    <li>FFmpeg extracts one frame per second from the video.</li>
+    <li>Frames that are too blurry, dark or otherwise unusable are discarded.</li>
+    <li>The model scores every remaining frame. A frame counts toward a finding only above a confidence threshold. Polyps get a lower threshold (0.6) than the other classes, because a missed polyp is worse than a false alarm.</li>
+    <li>Scores are smoothed over about three seconds, and a finding is kept only if it appears in at least two consecutive samples.</li>
+    <li>You get the verdict, its mean confidence, weaker findings marked “possible”, and up to five heatmaps from the frames that supported the verdict most.</li>
+  </ol>
+
+  <h2>What it recognises</h2>
+  <p>Eight classes from the HyperKvasir dataset (Borgli et al., 2020):</p>
+  <ul class="classes">
+    <li>Polyps</li><li>Dyed lifted polyps</li><li>Dyed resection margins</li><li>Esophagitis</li>
+    <li>Ulcerative colitis</li><li>Normal Z-line</li><li>Normal pylorus</li><li>Normal cecum</li>
+  </ul>
+  <p>Anything outside these, such as other diseases or other parts of the gut, will either be mislabelled as one of the eight or come back as no finding. The model has no way to say “this is something else”.</p>
+
+  <h2 id="accuracy">How well it works</h2>
+  <p>All figures come from data the model did not see in training.</p>
+  <div class="tablewrap"><table>
+    <tr><th>What was measured</th><th>Result</th></tr>
+    <tr><td>Single frames, all types</td><td>84.4%</td></tr>
+    <tr><td>Still photographs</td><td>95%</td></tr>
+    <tr><td>Frames taken from videos</td><td>66%</td></tr>
+    <tr><td>Whole videos, labelled finding detected (two held-out video sets)</td><td>65–80%</td></tr>
+  </table></div>
+  <p>Video is the weak spot, and polyps in video are the weakest of all. The video rules were tuned on 94 held-out HyperKvasir videos. The model has not been tested on footage from other hospitals, scopes or recording setups, so expect lower numbers there.</p>
+
+  <h2 id="privacy">Your data</h2>
+  <p>The analysis engine listens only on <code>127.0.0.1</code>, so nothing is sent over the network. Extracted frames and heatmaps are written to <code>%LOCALAPPDATA%\GastroVision\outputs</code> and deleted after seven days.</p>
+  <p>The one thing that can leave your machine is feedback, and only if you send it. The Send feedback button copies the app version, your Windows version and the model’s test accuracy to the clipboard. It contains no video, no file names and no patient data. You paste it into the form yourself.</p>
+
+  <h2>Installing</h2>
+  <p>The installer is not code-signed, so Windows SmartScreen may warn you. Choose <em>More info</em>, then <em>Run anyway</em>. To check the download first, run this in PowerShell and compare the result with the hash above:</p>
+  <p><code>certutil -hashfile GastroVision-Setup-4.0.0.exe SHA256</code></p>
+</div>
+
+<section class="cta" id="feedback">
+  <div class="col">
+    <h2>Tell us what went wrong</h2>
+    <p>Version 5 will be shaped by what people report. The most useful reports say what kind of video you used, what GastroVision answered, and what you expected instead. Please do not include anything that identifies a patient.</p>
+    <p><a class="btn" href="https://github.com/Infinte-aditya/gastrovision-4.0/issues/new/choose">Open a feedback form on GitHub</a></p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="col">
+    <p>© 2026 <a href="https://github.com/Infinte-aditya">Infinte-aditya</a>, <a href="https://github.com/Aadityaraj7254">Aadityaraj7254</a> and <a href="https://github.com/Alphacodae">Alphacodae</a>. GastroVision 4.0.0 is provided as is, without warranty. The <a href="https://github.com/Infinte-aditya/gastrovision-4.0">source code</a> is released under the GPL-3.0 licence.</p>
+    <p>Video decoding uses <a href="https://ffmpeg.org">FFmpeg</a>. Trained on HyperKvasir: Borgli et al., 2020.</p>
+  </div>
+</footer>
+
 </body>
 </html>
