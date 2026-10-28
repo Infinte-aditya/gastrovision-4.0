@@ -1,10 +1,14 @@
 """
 backend/main.py - analysis pipeline
 
-video -> frame extraction (3 fps) -> quality filter -> CNN prediction (calibrated) ->
+video -> frame extraction (1 fps) -> quality filter -> CNN prediction (calibrated) ->
 temporal video-level verdict -> CAM heatmaps (background thread)
+
+v4.0 UI update: the pipeline now publishes its stage (get_progress) and honours cancel requests
+(request_cancel) so the desktop UI can show a real progress bar.
 """
 import os
+import time
 import paths
 import shutil
 from threading import Lock, Thread
@@ -33,6 +37,32 @@ TOP_HEATMAPS = 5
 
 _engine = None
 _lock = Lock()
+
+# ---------------------------------------------------------------- progress / cancel (read by the UI) ----
+# stage -> overall percent at the START of that stage; the UI eases the bar between stages.
+_progress = {}
+_cancelled = set()
+
+
+class Cancelled(RuntimeError):
+    """Raised between pipeline stages when the user pressed Cancel."""
+
+
+def _set_progress(name: str, stage: str, pct: int, **extra) -> None:
+    _progress[name] = {"stage": stage, "pct": pct, "t": time.time(), **extra}
+
+
+def get_progress(name: str) -> dict:
+    return _progress.get(name, {"stage": "idle", "pct": 0})
+
+
+def request_cancel(name: str) -> None:
+    _cancelled.add(name)
+
+
+def _check_cancel(name: str) -> None:
+    if name in _cancelled:
+        raise Cancelled("Analysis cancelled.")
 
 
 def get_engine():
@@ -68,29 +98,42 @@ def _ensure_ffmpeg():
 
 def analyze(video_full_path: str) -> dict:
     """Full analysis. Returns the video summary dict (label, confidence, findings, ...)."""
-    if _ensure_ffmpeg() is None:
-        raise RuntimeError("ffmpeg was not found. Install ffmpeg or set GASTROVISION_FFMPEG.")
-    eng = get_engine()
-    pred, heat = eng["pred"], eng["heat"]
     video_name = os.path.splitext(os.path.basename(video_full_path))[0]
-    backend_dir = os.path.dirname(os.path.abspath(__file__))
+    _cancelled.discard(video_name)
+    _set_progress(video_name, "extract", 3)
+    try:
+        if _ensure_ffmpeg() is None:
+            raise RuntimeError("ffmpeg was not found. Install ffmpeg or set GASTROVISION_FFMPEG.")
+        eng = get_engine()
+        pred, heat = eng["pred"], eng["heat"]
 
-    frames = frame_extractor().extract_frames(video_full_path, "fixed_fps", 5, TARGET_FPS, MAX_FRAMES)
-    names, _, cleaned_dir = frame_selector().select_frames(frames, video_name)
-    if not names:
-        raise RuntimeError("No readable frames could be extracted from this video.")
-    pred.predict(cleaned_dir, video_name, frame_names=names)
+        frames = frame_extractor().extract_frames(video_full_path, "fixed_fps", 5, TARGET_FPS, MAX_FRAMES)
+        _check_cancel(video_name)
+        _set_progress(video_name, "filter", 30, n_extracted=len(frames))
+        names, _, cleaned_dir = frame_selector().select_frames(frames, video_name)
+        if not names:
+            raise RuntimeError("No readable frames could be extracted from this video.")
+        _check_cancel(video_name)
 
-    summary = eng["video"].summarize(video_name, conf_threshold=pred.conf_threshold,
-                                     class_thresholds=CLASS_THRESHOLDS, **verdict_params())
-    eng["frames"].compute_stats(video_name, pred.conf_threshold)          # writes frame_ranked.json (kept for the report tools)
-    picks = eng["video"].select_heatmap_frames(summary, video_name, TOP_HEATMAPS)
-    heatmap_dir = os.path.join(paths.outputs_dir(), video_name, "heatmaps")
+        _set_progress(video_name, "predict", 40, n_frames=len(names))
+        pred.predict(cleaned_dir, video_name, frame_names=names)
+        _check_cancel(video_name)
 
-    def run_heatmaps():
-        heat.generate_batch(cleaned_dir, picks, heatmap_dir, top_n=TOP_HEATMAPS)
-    Thread(target=run_heatmaps, daemon=True).start()
-    return summary
+        _set_progress(video_name, "verdict", 90, n_frames=len(names))
+        summary = eng["video"].summarize(video_name, conf_threshold=pred.conf_threshold,
+                                         class_thresholds=CLASS_THRESHOLDS, **verdict_params())
+        eng["frames"].compute_stats(video_name, pred.conf_threshold)          # writes frame_ranked.json (kept for the report tools)
+        picks = eng["video"].select_heatmap_frames(summary, video_name, TOP_HEATMAPS)
+        heatmap_dir = os.path.join(paths.outputs_dir(), video_name, "heatmaps")
+
+        def run_heatmaps():
+            heat.generate_batch(cleaned_dir, picks, heatmap_dir, top_n=TOP_HEATMAPS)
+        Thread(target=run_heatmaps, daemon=True).start()
+        _set_progress(video_name, "done", 100, n_frames=len(names))
+        return summary
+    except Exception:
+        _set_progress(video_name, "error", 0)
+        raise
 
 
 def prediction(video_full_path):
