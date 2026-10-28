@@ -1,56 +1,74 @@
-# Ignore videos
-*.mp4
-frontend/__pycache__/
-frontend/screens/__pycache__/
+# --- Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.coverage
+htmlcov/
 
-# Ignore output folder
-outputs/
+# --- Environments and secrets
+.venv/
+venv/
+env/
+.build-venv/
+.env
+.env.*
+*.pem
+*.key
+*.pfx
+*.p12
+credentials*.json
 
-.venv
+# --- Build and release output.
+# Sources in packaging/ (spec, .bat, installer script) ARE tracked. Never add a blanket "packaging/" or "*.spec".
+build/
+dist/
+release/
+packaging/ffmpeg/
+packaging/Output/
+*.exe
+*.msi
+*.spec.bak
+*.zip
+*.7z
 
-test_backend/__pycache__*/
+# --- Model weights and numeric dumps (backend/model/metrics.json stays tracked)
 *.onnx
 *.onnx.data
-
-# Video files
-*.mp4
-*.avi
-*.mov
-*.mkv
-
-# Machine Learning models
-*.onnx
 *.pth
 *.pt
 *.bin
 *.h5
+*.ckpt
+*.safetensors
+*.npy
+*.npz
 
-# Python environment & cache
-__pycache__/
-*.py[cod]
-*$py.class
-.venv/
-venv/
-env/
-.env
+# --- Videos and runtime data
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.wmv
+*.m4v
+*.webm
+outputs/
+uploads/
+backend/settings.json
+*.log
+tests/fixture_model/
+# Uncomment if Database/ holds datasets rather than code:
+# Database/
 
-# OS generated files
+# --- OS and editors
 .DS_Store
 Thumbs.db
-
-# generated / large artefacts
-backend/outputs/
-backend/uploads/
-tests/fixture_model/
-.pytest_cache/
-*.onnx
-*.onnx.data
-
-# release/build artefacts (never commit these - ffmpeg.exe alone exceeds GitHub's 100 MB file limit)
-packaging/ffmpeg/
-build/
-dist/
-release/
-.build-venv/
-*.exe
-*.spec.bak
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*~
