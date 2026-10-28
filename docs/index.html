@@ -112,7 +112,7 @@ footer p{margin-bottom:.5rem}
   </div>
 </div>
   <figure>
-    <img src="screenshot.png" width="1100" height="720" alt="GastroVision window after analysing a colitis video: the verdict ulcerative colitis with 85.3% mean confidence on the right, and a heatmap frame from the video on the left" onerror="this.closest('figure').hidden=true">
+    <img src="screenshot.png" width="2880" height="1704" alt="GastroVision window after analysing a colitis video: the verdict ulcerative colitis with 85.3% mean confidence on the right, and a heatmap frame from the video on the left" onerror="this.closest('figure').hidden=true">
     <figcaption>The window after analysing a colitis clip. Right: the verdict, mean confidence and other findings seen. Left: one of the heatmap frames, with warmer colours where the model looked.</figcaption>
   </figure>
 </div>
@@ -128,23 +128,25 @@ footer p{margin-bottom:.5rem}
   </ol>
 
   <h2>What it recognises</h2>
-  <p>Eight classes from the HyperKvasir dataset (Borgli et al., 2020):</p>
+  <p>Eight findings from the HyperKvasir dataset (Borgli et al., 2020), plus a ninth class, Other, for frames that match none of them:</p>
   <ul class="classes">
     <li>Polyps</li><li>Dyed lifted polyps</li><li>Dyed resection margins</li><li>Esophagitis</li>
     <li>Ulcerative colitis</li><li>Normal Z-line</li><li>Normal pylorus</li><li>Normal cecum</li>
   </ul>
-  <p>Anything outside these, such as other diseases or other parts of the gut, will either be mislabelled as one of the eight or come back as no finding. The model has no way to say “this is something else”.</p>
+  <p>Other is never reported as a finding, and frames the model puts there are ignored. It is one more trained class, not a general way of saying “I don’t know”: in testing, a frame the model called Other really was Other only 64% of the time. Anything outside the eight, such as other diseases or other parts of the gut, can be mislabelled as one of them, ignored as Other, or come back as no finding.</p>
 
   <h2 id="accuracy">How well it works</h2>
-  <p>All figures come from data the model did not see in training.</p>
+  <p>Single-frame figures come from 4,060 test frames the model was not trained on. Video figures come from labelled HyperKvasir videos run through the whole program at one frame per second.</p>
   <div class="tablewrap"><table>
     <tr><th>What was measured</th><th>Result</th></tr>
-    <tr><td>Single frames, all types</td><td>84.4%</td></tr>
-    <tr><td>Still photographs</td><td>95%</td></tr>
-    <tr><td>Frames taken from videos</td><td>66%</td></tr>
-    <tr><td>Whole videos, labelled finding detected (two held-out video sets)</td><td>65–80%</td></tr>
+    <tr><td>Single frames, all nine classes</td><td>84.4%</td></tr>
+    <tr><td>Polyp frames the model finds</td><td>68%</td></tr>
+    <tr><td>Polyp calls that are correct</td><td>89%</td></tr>
+    <tr><td>Whole videos with the right headline (46 labelled videos)</td><td>45 of 46</td></tr>
+    <tr><td>Extra false findings per video (same 46)</td><td>0.17</td></tr>
+    <tr><td>Polyp videos from a separate external set</td><td>1 of 3</td></tr>
   </table></div>
-  <p>Video is the weak spot, and polyps in video are the weakest of all. The video rules were tuned on 94 held-out HyperKvasir videos. The model has not been tested on footage from other hospitals, scopes or recording setups, so expect lower numbers there.</p>
+  <p>Polyps are the weakest class: about a third of polyp frames are missed. The 46-video result is a best case, because those videos come from the same dataset the model was built on. The model has not been tested on footage from other hospitals, scopes or recording setups, and the only outside check, three polyp videos, found one of them. Expect lower numbers on your own footage.</p>
 
   <h2 id="privacy">Your data</h2>
   <p>The analysis engine listens only on <code>127.0.0.1</code>, so nothing is sent over the network. Extracted frames and heatmaps are written to <code>%LOCALAPPDATA%\GastroVision\outputs</code> and deleted after seven days.</p>
