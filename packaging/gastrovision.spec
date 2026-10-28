@@ -27,6 +27,10 @@ for exe in ("ffmpeg.exe", "ffprobe.exe"):
 a = Analysis([os.path.join(ROOT, "launcher.py")],
              pathex=[ROOT, os.path.join(ROOT, "backend"), os.path.join(ROOT, "frontend")],
              binaries=binaries, datas=datas, hiddenimports=hidden, excludes=["tkinter", "pytest", "scipy", "matplotlib", "pandas", "IPython"])
+SYS = os.path.join(os.environ["SystemRoot"], "System32")
+RT = ("msvcp140.dll", "msvcp140_1.dll", "msvcp140_2.dll", "vcruntime140.dll", "vcruntime140_1.dll")
+a.binaries = [b for b in a.binaries if os.path.basename(b[0]).lower() not in RT]
+a.binaries += [(n, os.path.join(SYS, n), "BINARY") for n in RT if os.path.exists(os.path.join(SYS, n))]
 pyz = PYZ(a.pure)
 icon = os.path.join(ROOT, "packaging", "gastrovision.ico")
 exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name="GastroVision", console=False,
