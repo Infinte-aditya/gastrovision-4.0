@@ -136,17 +136,16 @@ footer p{margin-bottom:.5rem}
   <p>Other is never reported as a finding, and frames the model puts there are ignored. It is one more trained class, not a general way of saying “I don’t know”: in testing, a frame the model called Other really was Other only 64% of the time. Anything outside the eight, such as other diseases or other parts of the gut, can be mislabelled as one of them, ignored as Other, or come back as no finding.</p>
 
   <h2 id="accuracy">How well it works</h2>
-  <p>Single-frame figures come from 4,060 test frames the model was not trained on. Video figures come from labelled HyperKvasir videos run through the whole program at one frame per second.</p>
+  <p>All figures come from data the model did not see in training.</p>
   <div class="tablewrap"><table>
     <tr><th>What was measured</th><th>Result</th></tr>
-    <tr><td>Single frames, all nine classes</td><td>84.4%</td></tr>
-    <tr><td>Polyp frames the model finds</td><td>68%</td></tr>
-    <tr><td>Polyp calls that are correct</td><td>89%</td></tr>
-    <tr><td>Whole videos with the right headline (46 labelled videos)</td><td>45 of 46</td></tr>
-    <tr><td>Extra false findings per video (same 46)</td><td>0.17</td></tr>
-    <tr><td>Polyp videos from a separate external set</td><td>1 of 3</td></tr>
+    <tr><td>Single frames, all types</td><td>84.4%</td></tr>
+    <tr><td>Still photographs</td><td>about 95%</td></tr>
+    <tr><td>Frames taken from videos</td><td>about 66%</td></tr>
+    <tr><td>Whole videos, labelled finding detected (46 test videos, 48 validation videos)</td><td>about 85% / 65%</td></tr>
+    <tr><td>Polyp videos detected (test, validation)</td><td>14 of 17, 7 of 12</td></tr>
   </table></div>
-  <p>Polyps are the weakest class: about a third of polyp frames are missed. The 46-video result is a best case, because those videos come from the same dataset the model was built on. The model has not been tested on footage from other hospitals, scopes or recording setups, and the only outside check, three polyp videos, found one of them. Expect lower numbers on your own footage.</p>
+  <p>Video is the weak spot, and polyps in video are the weakest of all. The video rules were tuned on these 94 HyperKvasir videos, so the video figures are best-case. The model has not been tested on footage from other hospitals, scopes or recording setups, so expect lower numbers there.</p>
 
   <h2 id="privacy">Your data</h2>
   <p>The analysis engine listens only on <code>127.0.0.1</code>, so nothing is sent over the network. Extracted frames and heatmaps are written to <code>%LOCALAPPDATA%\GastroVision\outputs</code> and deleted after seven days.</p>
